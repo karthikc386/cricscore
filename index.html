@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CricScore</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-primary">
+    <div class="container-fluid">
+      <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand ms-2" href="#">CricScore</a>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Menu</h5>
+      <button class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Help</a></li>
+        <li class="nav-item mt-3"><a class="nav-link text-danger" href="#">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <main class="container my-5">
+    <div class="text-center mb-3">
+      <h1 id="score-header">0/0 (0.0, R.R –)</h1>
+      <p id="balls-to-go">Balls to go – 6</p>
+      <button id="toggle-history" class="btn btn-sm btn-outline-secondary">
+        Show History
+      </button>
+    </div>
+    <div id="overs-container"></div>
+  </main>
+
+  <!-- Controls -->
+  <div class="container mb-4">
+    <div class="row row-cols-auto g-2 align-items-center">
+      <div class="col d-flex gap-2">
+        <div role="button" id="reset-btn" class="btn btn-light">Reset</div>
+        <div role="button" id="undo-last-btn" class="btn btn-warning">Undo</div>
+      </div>
+      <div class="col">
+        <div role="button" id="dot-btn" class="btn btn-light">Dot</div>
+      </div>
+      <div class="col">
+        <div role="button" id="set-bowler" class="btn btn-secondary">Set Bowler</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-primary event-trigger" data-event="run" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Run</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-danger event-trigger" data-event="wicket" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Wicket</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-warning event-trigger" data-event="wide" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Wide</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-secondary event-trigger" data-event="bye" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Bye</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-secondary event-trigger" data-event="legbye" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Leg Bye</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-success event-trigger" data-event="noball" data-bs-toggle="modal"
+          data-bs-target="#eventModal">No‑ball</div>
+      </div>
+      <div class="col">
+        <div class="btn btn-outline-info event-trigger" data-event="penalty" data-bs-toggle="modal"
+          data-bs-target="#eventModal">Penalty</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Select Value</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="option-list" class="d-grid gap-2"></div>
+          <div id="other-input-group" class="input-group mt-3 d-none">
+            <input type="number" id="other-value" class="form-control">
+            <button class="btn btn-primary" id="other-submit">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bowler Modal -->
+  <div class="modal fade" id="bowlerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Set Bowler for Over <span id="bowler-over-number">1</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <select id="bowler-select" class="form-select mb-2">
+            <option value="" disabled>Select bowler</option>
+          </select>
+          <button type="button" id="add-new-bowler" class="btn btn-sm btn-outline-primary">Add New Bowler</button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="save-bowler" class="btn btn-primary" disabled>Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const prefixSegments = {
+        run: [''], wicket: ['W'], wide: ['WD'], bye: ['B'], legbye: ['LB'],
+        noball: ['NB'], penalty: ['P'],
+        wicket_wide: ['WD', 'W'], wicket_noball: ['NB', 'W'],
+        wicket_bye: ['B', 'W'], wicket_legbye: ['LB', 'W'],
+        noball_bye: ['NB', 'B'], noball_legbye: ['NB', 'LB']
+      };
+  
+      const config = {
+        run: { title: 'Select Runs', values: [1, 2, 3, 4, 5, 6], allowOther: true, otherRange: { min: -10, max: 20 } },
+        wicket: { title: 'Wicket + Extras', values: [0, 1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        wide: { title: 'Wides', values: [1, 2, 3, 4, 5], allowOther: true, otherRange: { min: 1, max: 20 } },
+        bye: { title: 'Byes', values: [1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        legbye: { title: 'Leg Byes', values: [1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        noball: { title: 'No-ball + Runs', values: [1, 2, 3, 4, 5, 6, 7], allowOther: true, otherRange: { min: 1, max: 20 } },
+        penalty: { title: 'Penalty Runs', values: [1, 2, 3, 4, 5], allowOther: true, otherRange: { min: 1, max: 20 } },
+        wicket_wide: { title: 'Wide + Wicket + Runs', values: [0, 1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        wicket_noball: { title: 'No-ball + Wicket + Runs', values: [0, 1, 2, 3, 4, 5, 6], allowOther: true, otherRange: { min: 0, max: 20 } },
+        wicket_bye: { title: 'Bye + Wicket + Runs', values: [0, 1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        wicket_legbye: { title: 'Leg Bye + Wicket + Runs', values: [0, 1, 2, 3, 4], allowOther: true, otherRange: { min: 0, max: 20 } },
+        noball_bye: { title: 'No-ball + Byes', values: [1, 2, 3, 4], allowOther: true, otherRange: { min: 1, max: 20 } },
+        noball_legbye: { title: 'No-ball + Leg Byes', values: [1, 2, 3, 4], allowOther: true, otherRange: { min: 1, max: 20 } }
+      };
+  
+      let totalRuns = 0, totalWickets = 0, ballCount = 0;
+      let currentOver = 1, ballsInThisOver = 0;
+      const bowlerNames = {}, bowlerList = [];
+      const legitBalls = new Set(['run', 'wicket', 'bye', 'legbye']);
+      let freeHitNext = false, showHistory = false;
+      let currentEventKey, currentBallsDiv;
+  
+      const oversContainer = document.getElementById('overs-container'),
+        scoreHeader = document.getElementById('score-header'),
+        ballsPara = document.getElementById('balls-to-go'),
+        toggleHistBtn = document.getElementById('toggle-history'),
+        eventModalEl = document.getElementById('eventModal'),
+        optionList = document.getElementById('option-list'),
+        otherGroup = document.getElementById('other-input-group'),
+        otherInput = document.getElementById('other-value'),
+        otherSubmit = document.getElementById('other-submit'),
+        bsEventModal = new bootstrap.Modal(eventModalEl),
+        bowlerModalEl = document.getElementById('bowlerModal'),
+        bowlerSelect = document.getElementById('bowler-select'),
+        addNewBowler = document.getElementById('add-new-bowler'),
+        saveBowlerBtn = document.getElementById('save-bowler'),
+        bowlerOverNum = document.getElementById('bowler-over-number'),
+        bsBowlerModal = new bootstrap.Modal(bowlerModalEl);
+  
+      function createOverGroup(n) {
+        const g = document.createElement('div'); g.className = 'mb-3'; g.id = `over-${n}`;
+        const h = document.createElement('h5');
+        h.innerHTML = `Over ${n}: <span class="bowler-name">${bowlerNames[n] || ''}</span>`;
+        g.appendChild(h);
+        const d = document.createElement('div');
+        d.className = 'd-flex flex-row flex-nowrap overflow-auto gap-2';
+        g.appendChild(d);
+        oversContainer.appendChild(g);
+        return d;
+      }
+  
+      function updateHeader() {
+        const ovs = Math.floor(ballCount / 6), bls = ballCount % 6,
+          rr = ovs > 0 ? (totalRuns / ovs).toFixed(2) : '–';
+        scoreHeader.textContent = `${totalRuns}/${totalWickets} (${ovs}.${bls}, R.R ${rr})`;
+        ballsPara.textContent = `Balls to go – ${6 - bls}`;
+      }
+  
+      function updateHistoryVisibility() {
+        const groups = Array.from(oversContainer.children);
+        groups.forEach((g, i) => {
+          if (showHistory) g.classList.remove('d-none');
+          else g.classList.toggle('d-none', i < groups.length - 2);
+        });
+        toggleHistBtn.textContent = showHistory ? 'Hide History' : 'Show History';
+      }
+  
+      function startNewOver() {
+        currentOver++; ballsInThisOver = 0;
+        currentBallsDiv = createOverGroup(currentOver);
+        promptBowlerModal();
+        updateHistoryVisibility();
+      }
+  
+      function appendPill(eventKey, val) {
+        if (legitBalls.has(eventKey) && ballsInThisOver === 0 && !bowlerNames[currentOver]) {
+          alert(`Please set the bowler for Over ${currentOver} first.`);
+          return;
+        }
+        if (legitBalls.has(eventKey) && ballsInThisOver === 6) startNewOver();
+  
+        const segs = prefixSegments[eventKey] || [''];
+        let label = eventKey === 'run' ? `${val}` : segs.join('<br>') + (val != null ? `<br>${val}` : '');
+  
+        let colorCls = 'btn-light';
+        if (eventKey === 'wicket') colorCls = 'btn-danger';
+        else if (['wide', 'noball', 'penalty', 'wicket_wide', 'wicket_noball', 'wicket_bye', 'wicket_legbye'].includes(eventKey)) {
+          colorCls = 'btn-dark';
+        }
+  
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn ${colorCls} rounded-circle px-3 py-2`;
+        btn.innerHTML = label;
+        if (freeHitNext && legitBalls.has(eventKey)) {
+          btn.classList.add('border', 'border-info');
+          freeHitNext = false;
+        }
+        currentBallsDiv.appendChild(btn);
+  
+        switch (eventKey) {
+          case 'run': case 'wicket': case 'wide': case 'bye': case 'legbye':
+          case 'noball': case 'penalty':
+            totalRuns += val; break;
+          case 'wicket_wide': case 'wicket_noball':
+            totalRuns += 1; break;
+          case 'wicket_bye': case 'wicket_legbye':
+            totalRuns += val; break;
+          case 'noball_bye': case 'noball_legbye':
+            totalRuns += val + 1; break;
+        }
+        if (eventKey.startsWith('wicket')) totalWickets++;
+        if (legitBalls.has(eventKey)) { ballCount++; ballsInThisOver++; }
+        if (['noball', 'wicket_noball'].includes(eventKey)) freeHitNext = true;
+  
+        updateHeader();
+      }
+  
+      function openModalFor(key) {
+        currentEventKey = key;
+        const cfg = config[key];
+        eventModalEl.querySelector('.modal-title').textContent = cfg.title;
+        optionList.innerHTML = '';
+        cfg.values.forEach(v => {
+          const b = document.createElement('button');
+          b.className = 'btn btn-outline-primary'; b.innerText = v;
+          b.addEventListener('click', () => { appendPill(key, v); bsEventModal.hide(); pushToHistory(); });
+          optionList.appendChild(b);
+        });
+        if (key === 'wicket') {
+          ['wicket_wide', 'wicket_noball', 'wicket_bye', 'wicket_legbye'].forEach(c => {
+            const cb = document.createElement('button');
+            cb.className = 'btn btn-outline-dark';
+            cb.innerText = config[c].title;
+            cb.addEventListener('click', () => openModalFor(c));
+            optionList.appendChild(cb);
+          });
+        }
+        if (key === 'noball') {
+          ['noball_bye', 'noball_legbye'].forEach(c => {
+            const cb = document.createElement('button');
+            cb.className = 'btn btn-outline-dark';
+            cb.innerText = config[c].title;
+            cb.addEventListener('click', () => openModalFor(c));
+            optionList.appendChild(cb);
+          });
+        }
+        if (cfg.allowOther) {
+          otherGroup.classList.remove('d-none');
+          otherInput.min = cfg.otherRange.min;
+          otherInput.max = cfg.otherRange.max;
+          otherInput.value = '';
+        } else otherGroup.classList.add('d-none');
+      }
+  
+      otherSubmit.addEventListener('click', () => {
+        const v = Number(otherInput.value), cfg = config[currentEventKey];
+        if (!isNaN(v) && v >= cfg.otherRange.min && v <= cfg.otherRange.max) {
+          appendPill(currentEventKey, v);
+          bsEventModal.hide();
+          pushToHistory();
+        } else {
+          alert(`Enter a number between ${cfg.otherRange.min} and ${cfg.otherRange.max}.`);
+        }
+      });
+  
+      document.querySelectorAll('.event-trigger').forEach(el =>
+        el.addEventListener('click', e => openModalFor(e.currentTarget.dataset.event))
+      );
+  
+      document.getElementById('dot-btn').addEventListener('click', () => {
+        appendPill('run', 0);
+        pushToHistory();
+      });
+  
+      toggleHistBtn.addEventListener('click', () => {
+        showHistory = !showHistory;
+        updateHistoryVisibility();
+      });
+  
+      document.getElementById('set-bowler').addEventListener('click', promptBowlerModal);
+  
+      bowlerSelect.addEventListener('change', () => {
+        saveBowlerBtn.disabled = !bowlerSelect.value;
+      });
+  
+      addNewBowler.addEventListener('click', () => {
+        const name = prompt('Enter new bowler name:');
+        if (name && !bowlerList.includes(name)) {
+          bowlerList.push(name);
+          const o = document.createElement('option');
+          o.value = name; o.textContent = name;
+          bowlerSelect.appendChild(o);
+          bowlerSelect.value = name;
+          saveBowlerBtn.disabled = false;
+        }
+      });
+  
+      saveBowlerBtn.addEventListener('click', () => {
+        const name = bowlerSelect.value;
+        bowlerNames[currentOver] = name;
+        const span = document.querySelector(`#over-${currentOver} .bowler-name`);
+        if (span) span.textContent = name;
+        if (!bowlerList.includes(name)) bowlerList.push(name);
+        bsBowlerModal.hide();
+      });
+  
+      function promptBowlerModal() {
+        bowlerOverNum.textContent = currentOver;
+        bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
+        bowlerList.forEach(name => {
+          const o = document.createElement('option');
+          o.value = name; o.textContent = name;
+          bowlerSelect.appendChild(o);
+        });
+        if (bowlerNames[currentOver]) {
+          setTimeout(() => {
+            bowlerSelect.value = bowlerNames[currentOver];
+            saveBowlerBtn.disabled = false;
+          }, 0);
+        } else {
+          bowlerSelect.value = '';
+          saveBowlerBtn.disabled = true;
+        }
+        bsBowlerModal.show();
+      }
+  
+      // Local Storage & Undo / Reset Logic
+      const LOCAL_KEY = 'cricScoreSession';
+      let historyStack = [];
+  
+      function saveSession() {
+        const session = {
+          totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
+          bowlerNames, bowlerList, freeHitNext,
+          oversHTML: oversContainer.innerHTML,
+          historyStack
+        };
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(session));
+      }
+  
+      function loadSession() {
+        const saved = localStorage.getItem(LOCAL_KEY);
+        if (!saved) return false;
+        const session = JSON.parse(saved);
+        totalRuns = session.totalRuns;
+        totalWickets = session.totalWickets;
+        ballCount = session.ballCount;
+        ballsInThisOver = session.ballsInThisOver;
+        currentOver = session.currentOver;
+        freeHitNext = session.freeHitNext;
+        Object.assign(bowlerNames, session.bowlerNames);
+        bowlerList.splice(0, bowlerList.length, ...session.bowlerList);
+        oversContainer.innerHTML = session.oversHTML;
+        historyStack = session.historyStack || [];
+        currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
+        updateHeader();
+        updateHistoryVisibility();
+        return true;
+      }
+  
+      function pushToHistory() {
+        const snapshot = {
+          totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
+          oversHTML: oversContainer.innerHTML,
+          freeHitNext
+        };
+        historyStack.push(JSON.parse(JSON.stringify(snapshot)));
+        saveSession();
+      }
+  
+      function undoLastAction() {
+        if (historyStack.length <= 1) return alert("Nothing to undo.");
+        historyStack.pop();
+        const prev = historyStack[historyStack.length - 1];
+        totalRuns = prev.totalRuns;
+        totalWickets = prev.totalWickets;
+        ballCount = prev.ballCount;
+        ballsInThisOver = prev.ballsInThisOver;
+        currentOver = prev.currentOver;
+        freeHitNext = prev.freeHitNext;
+        oversContainer.innerHTML = prev.oversHTML;
+        currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
+        updateHeader();
+        updateHistoryVisibility();
+        saveSession();
+      }
+  
+      function resetGame() {
+        if (!confirm('Reset the match and clear all progress?')) return;
+        localStorage.removeItem(LOCAL_KEY);
+        location.reload();
+      }
+  
+      document.getElementById('reset-btn').addEventListener('click', resetGame);
+      document.getElementById('undo-last-btn').addEventListener('click', undoLastAction);
+  
+      // Initial state
+      currentBallsDiv = createOverGroup(1);
+      updateHeader();
+      promptBowlerModal();
+      updateHistoryVisibility();
+      pushToHistory();
+      loadSession();
+    });
+  </script>
+  
+</body>
+
+</html>
