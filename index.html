@@ -123,7 +123,7 @@
   <main class="container my-4 text-center">
     <h1 id="score-header" class="display-4 fw-bold">0/0</h1>
     <p class="mb-1 fs-5">Overs: <span id="overs-display">0.0</span> | R.R: <span id="run-rate-display">–</span></p>
-    <p class="mb-3 text-muted">Balls Remaining: <span id="balls-to-go">6</span></p>
+    <p class="mb-3 text-muted"><b>Balls Remaining: <span id="balls-to-go">6</span>to go</b></p>
 
     <div class="d-flex justify-content-center gap-2 mb-3">
       <button id="toggle-history" class="btn btn-sm btn-outline-secondary">Show History</button>
@@ -315,7 +315,14 @@
         g.id = `over-${n}`;
 
         const h = document.createElement('h5');
-        h.innerHTML = `Over ${n}: <span class="bowler-name">${bowlerNames[n] || ''}</span> <small class="text-muted ms-2">(<span id="over-${n}-runs">0</span> runs)</small>`;
+        h.innerHTML = `
+                        Over ${n}: 
+                        <span class="bowler-name">${bowlerNames[n] || ''}</span>
+                        <button class="btn btn-sm btn-link p-0 ms-2 edit-bowler" data-over="${n}" title="Edit Bowler">
+                          ✏️
+                        </button>
+                        <small class="text-muted ms-2">(<span id="over-${n}-runs">0</span> runs)</small>
+                      `;
         g.appendChild(h);
 
         const d = document.createElement('div');
@@ -325,6 +332,13 @@
         oversContainer.appendChild(g);
         return d;
       }
+
+      oversContainer.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit-bowler')) {
+          const overNum = parseInt(e.target.dataset.over);
+          promptBowlerEditModal(overNum);
+        }
+      });
 
       function updateHeader() {
         const overs = Math.floor(ballCount / 6);
@@ -560,6 +574,22 @@
         }
         bsBowlerModal.show();
       }
+
+      function promptBowlerEditModal(overNum) {
+        bowlerOverNum.textContent = overNum;
+        bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
+        bowlerList.forEach(name => {
+          const o = document.createElement('option');
+          o.value = name; o.textContent = name;
+          bowlerSelect.appendChild(o);
+        });
+        bowlerSelect.value = bowlerNames[overNum] || '';
+        saveBowlerBtn.disabled = !bowlerSelect.value;
+
+        currentOver = overNum; // Temporarily set currentOver for saving logic
+        bsBowlerModal.show();
+      }
+
 
       // Local Storage & Undo / Reset Logic
       const LOCAL_KEY = 'cricScoreSession';
