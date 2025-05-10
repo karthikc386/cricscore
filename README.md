@@ -35,10 +35,8 @@ A single-page web application built with HTML, CSS (Bootstrap 5), and vanilla Ja
 
 ## How to Use
 
-1.  **Download:** Get the `index.html` file.
-2.  **Open:** Open the `index.html` file directly in your web browser (Chrome, Firefox, Edge, Safari recommended). No web server is needed.
-3.  **Set Bowler:** Before starting an over (or during), click "Set Bowler". Select an existing bowler from the dropdown or click "Add New Bowler" to enter a name. Click "Save". The bowler's name will appear next to the over number.
-4.  **Record Events:**
+1.  **Set Bowler:** Before starting an over (or during), click "Set Bowler". Select an existing bowler from the dropdown or click "Add New Bowler" to enter a name. Click "Save". The bowler's name will appear next to the over number.
+2.  **Record Events:**
     *   Click **Dot** for a delivery with no run (counts as a legal ball).
     *   Click **Run**, **Wicket**, **Wide**, **No-ball**, **Bye**, **Leg Bye**, or **Penalty** to open a modal specific to that event.
     *   In the modal:
@@ -46,9 +44,9 @@ A single-page web application built with HTML, CSS (Bootstrap 5), and vanilla Ja
         *   For **Wicket** or **No-ball**, additional buttons appear to record complex events (like "Wide + Wicket + Runs" or "No-ball + Byes"). Clicking these may open *another* modal layer for run selection if applicable.
         *   Use the "Other" input field for values not listed (within specified ranges) and click "Add".
     *   The corresponding ball pill will be added to the current over, and the scoreboard will update.
-5.  **View Bowling Stats:** Click the "Bowling" button to open a modal displaying the current statistics (O, R, W, WD, NB) for each bowler.
-6.  **Manage History:** Click "Show History" to view all past overs. Click "Hide History" to collapse the view to only the most recent overs.
-7.  **Undo/Reset:** Use the "Undo" button to correct the last entry. Use the "Reset" button (with confirmation) to start a completely new game (this clears saved data).
+3.  **View Bowling Stats:** Click the "Bowling" button to open a modal displaying the current statistics (O, R, W, WD, NB) for each bowler.
+4.  **Manage History:** Click "Show History" to view all past overs. Click "Hide History" to collapse the view to only the most recent overs.
+5.  **Undo/Reset:** Use the "Undo" button to correct the last entry. Use the "Reset" button (with confirmation) to start a completely new game (this clears saved data).
 
 ## Technical Details
 
