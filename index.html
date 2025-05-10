@@ -23,20 +23,29 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 42px;
+      padding: 0.5rem 0.75rem;
       height: 42px;
-      border-radius: 50%;
+      border-radius: 0.5rem;
       font-weight: bold;
       font-size: 1rem;
       color: white;
+      white-space: nowrap; 
     }
 
     .ball-run {
-      background-color: #0d6efd;
+      background-color: #cbccce;
+    }
+
+    .ball-fourrun {
+      background-color: #0ec281;
+    }
+
+    .ball-sixrun {
+      background-color: #7a41d8;
     }
 
     .ball-wicket {
-      background-color: #dc3545;
+      background-color: #e44242;
     }
 
     .ball-wide,
@@ -123,7 +132,7 @@
   <main class="container my-4 text-center">
     <h1 id="score-header" class="display-4 fw-bold">0/0</h1>
     <p class="mb-1 fs-5">Overs: <span id="overs-display">0.0</span> | R.R: <span id="run-rate-display">–</span></p>
-    <p class="mb-3 text-muted"><b>Balls Remaining: <span id="balls-to-go">6</span>to go</b></p>
+    <p class="mb-3 text-muted"><b>Balls Remaining: <span id="balls-to-go">6</span> to go</b></p>
 
     <div class="d-flex justify-content-center gap-2 mb-3">
       <button id="toggle-history" class="btn btn-sm btn-outline-secondary">Show History</button>
@@ -343,7 +352,8 @@
       function updateHeader() {
         const overs = Math.floor(ballCount / 6);
         const balls = ballCount % 6;
-        const runRate = overs > 0 ? (totalRuns / overs).toFixed(2) : '–';
+        const totalOvers = overs + balls / 6;
+        const runRate = ballCount > 0 ? (totalRuns / totalOvers).toFixed(2) : '–';
 
         // Update individual parts of the scoreboard
         document.getElementById('score-header').textContent = `${totalRuns}/${totalWickets}`;
@@ -376,11 +386,19 @@
         }
 
         const segs = prefixSegments[eventKey] || [''];
-        let label = eventKey === 'run' ? `${val}` : segs.join('<br>') + (val != null ? `<br>${val}` : '');
+        let label = eventKey === 'run' ? `${val}` : segs.join('') + (val != null ? `${val}` : '');
 
         // Style classes
         let colorClass = 'ball-default';
-        if (eventKey === 'run') colorClass = 'ball-run';
+        if (eventKey === 'run') {
+          if (val == 4) {
+            colorClass = 'ball-fourrun';
+          } else if (val == 6) {
+            colorClass = 'ball-sixrun';
+          } else {
+            colorClass = 'ball-run';
+          }
+        }
         else if (eventKey.startsWith('wicket')) colorClass = 'ball-wicket';
         else if (['wide', 'wicket_wide'].includes(eventKey)) colorClass = 'ball-wide';
         else if (['noball', 'wicket_noball', 'noball_bye', 'noball_legbye'].includes(eventKey)) colorClass = 'ball-noball';
@@ -686,7 +704,7 @@
 
           balls.forEach(pill => {
             const text = pill.innerText.toUpperCase();
-            const isWicket = text.includes('W');
+            const isWicket = [...text].some((ch, i) => ch === 'W' && text[i + 1] !== 'D');
             const isWide = text.includes('WD');
             const isNoBall = text.includes('NB');
             const isBye = text.includes('B') || text.includes('LB');
@@ -727,13 +745,13 @@
         Object.entries(bowlerStats).forEach(([bowler, data]) => {
           const row = document.createElement('tr');
           row.innerHTML = `
-      <td>${bowler}</td>
-      <td>${data.overs}</td>
-      <td>${data.runs}</td>
-      <td>${data.wickets}</td>
-      <td>${data.wd}</td>
-      <td>${data.nb}</td>
-    `;
+            <td>${bowler}</td>
+            <td>${data.overs}</td>
+            <td>${data.runs}</td>
+            <td>${data.wickets}</td>
+            <td>${data.wd}</td>
+            <td>${data.nb}</td>
+          `;
           tbody.appendChild(row);
         });
       }
