@@ -131,13 +131,27 @@
   <!-- Main Scoreboard -->
   <main class="container my-4 text-center">
     <h1 id="score-header" class="display-4 fw-bold">0/0</h1>
-    <p class="mb-1 fs-5">Overs: <span id="overs-display">0.0</span> | R.R: <span id="run-rate-display">–</span></p>
-    <p class="mb-3 text-muted"><b>Balls Remaining: <span id="balls-to-go">6</span> to go</b></p>
+    <p class="mb-1 fs-5">Overs: <span id="overs-display">0.0</span><span id="total-overs-display"></span> | R.R: <span id="run-rate-display">–</span><span id="req-run-rate-display"></span></p>
+
+    <!-- Progress bar for innings (shown only when overs are set) -->
+    <div id="innings-progress-container" class="mb-2 d-none">
+      <div class="progress" style="height: 8px;">
+        <div id="innings-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <p class="mb-1 text-muted"><b>Balls Remaining in Over: <span id="balls-in-over">6</span></b></p>
+    <p id="innings-balls-remaining" class="mb-1 text-muted d-none"><b>Balls Remaining in Innings: <span id="balls-in-innings">0</span></b></p>
+    <p id="target-display" class="mb-3 text-primary fw-bold d-none">Need <span id="runs-needed">0</span> runs in <span id="balls-for-target">0</span> balls</p>
 
     <div class="d-flex justify-content-center gap-2 mb-3">
       <button id="toggle-history" class="btn btn-sm btn-outline-secondary">Show History</button>
       <button id="show-bowling" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
         data-bs-target="#bowlingModal">Bowling</button>
+      <button id="set-innings-overs" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+        data-bs-target="#inningsModal">Set Overs</button>
+      <button id="set-target" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+        data-bs-target="#targetModal">Set Target</button>
     </div>
 
     <div id="overs-container" class="mt-3">
@@ -211,6 +225,53 @@
     </div>
   </div>
 
+  <!-- Target Modal -->
+  <div class="modal fade" id="targetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Set Target</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label for="target-runs-input" class="form-label">Runs scored by opposing team:</label>
+          <input type="number" id="target-runs-input" class="form-control" min="0" max="9999" placeholder="e.g., 180">
+          <small class="text-muted">Target to win will be this + 1</small>
+          <div class="mt-3">
+            <button type="button" class="btn btn-sm btn-outline-danger" id="clear-target">Clear Target</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="save-target" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Innings Overs Modal -->
+  <div class="modal fade" id="inningsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Set Innings Overs</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label for="innings-overs-input" class="form-label">Number of Overs:</label>
+          <input type="number" id="innings-overs-input" class="form-control" min="1" max="200" placeholder="e.g., 20 for T20, 50 for ODI">
+          <div class="mt-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="preset-t20">T20 (20)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="preset-odi">ODI (50)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="preset-test">Unlimited</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="save-innings-overs" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bowler Modal -->
   <div class="modal fade" id="bowlerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -263,6 +324,34 @@
     </div>
   </div>
 
+  <!-- Toast Notifications -->
+  <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+    <div id="freeHitToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-bold">
+          🎯 Free Hit - Next Ball!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+    <div id="inningsCompleteToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-bold">
+          🏏 Innings Complete!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+    <div id="targetAchievedToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-bold">
+          🎉 Target Achieved! Team Wins!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -293,6 +382,8 @@
         noball_legbye: { title: 'No-ball + Leg Byes', values: [1, 2, 3, 4], allowOther: true, otherRange: { min: 1, max: 20 } }
       };
 
+      const BALLS_PER_OVER = 6;  // Named constant instead of magic number
+
       let totalRuns = 0, totalWickets = 0, ballCount = 0;
       let currentOver = 1, ballsInThisOver = 0;
       const bowlerNames = {}, bowlerList = [];
@@ -300,6 +391,10 @@
       let freeHitNext = false, showHistory = false;
       let currentEventKey, currentBallsDiv;
       let runsPerOver = { 1: 0 };
+      let totalInningsOvers = null;  // null means unlimited overs
+      let targetRuns = null;  // null means no target set (batting first)
+      let targetAchievedNotified = false;  // Prevent toast spam
+      let inningsCompleteNotified = false;  // Prevent toast spam
 
       const oversContainer = document.getElementById('overs-container'),
         scoreHeader = document.getElementById('score-header'),
@@ -324,14 +419,18 @@
         g.id = `over-${n}`;
 
         const h = document.createElement('h5');
+        // Fix: Use textContent for user input to prevent XSS
         h.innerHTML = `
-                        Over ${n}: 
-                        <span class="bowler-name">${bowlerNames[n] || ''}</span>
+                        Over ${n}:
+                        <span class="bowler-name"></span>
                         <button class="btn btn-sm btn-link p-0 ms-2 edit-bowler" data-over="${n}" title="Edit Bowler">
                           ✏️
                         </button>
                         <small class="text-muted ms-2">(<span id="over-${n}-runs">0</span> runs)</small>
                       `;
+        // Set bowler name safely using textContent
+        const bowlerNameSpan = h.querySelector('.bowler-name');
+        bowlerNameSpan.textContent = bowlerNames[n] || '';
         g.appendChild(h);
 
         const d = document.createElement('div');
@@ -350,16 +449,119 @@
       });
 
       function updateHeader() {
-        const overs = Math.floor(ballCount / 6);
-        const balls = ballCount % 6;
-        const totalOvers = overs + balls / 6;
-        const runRate = ballCount > 0 ? (totalRuns / totalOvers).toFixed(2) : '–';
+        const overs = Math.floor(ballCount / BALLS_PER_OVER);
+        const balls = ballCount % BALLS_PER_OVER;
+        // Fix: Calculate run rate based on actual balls bowled, not decimal overs
+        const runRate = ballCount > 0 ? ((totalRuns / ballCount) * BALLS_PER_OVER).toFixed(2) : '–';
 
         // Update individual parts of the scoreboard
         document.getElementById('score-header').textContent = `${totalRuns}/${totalWickets}`;
         document.getElementById('overs-display').textContent = `${overs}.${balls}`;
+
+        // Show total overs if set
+        const totalOversDisplay = document.getElementById('total-overs-display');
+        if (totalInningsOvers !== null) {
+          totalOversDisplay.textContent = `/${totalInningsOvers}`;
+        } else {
+          totalOversDisplay.textContent = '';
+        }
+
         document.getElementById('run-rate-display').textContent = runRate;
-        document.getElementById('balls-to-go').textContent = `${6 - balls}`;
+
+        // Update required run rate if target and overs are set
+        const reqRunRateDisplay = document.getElementById('req-run-rate-display');
+        if (targetRuns !== null && totalInningsOvers !== null) {
+          const totalBallsInInnings = totalInningsOvers * BALLS_PER_OVER;
+          const ballsLeft = Math.max(0, totalBallsInInnings - ballCount);
+          const runsNeeded = targetRuns - totalRuns;
+
+          if (ballsLeft > 0 && runsNeeded > 0) {
+            const requiredRunRate = ((runsNeeded / ballsLeft) * BALLS_PER_OVER).toFixed(2);
+            reqRunRateDisplay.textContent = ` | Req R.R: ${requiredRunRate}`;
+          } else if (runsNeeded <= 0) {
+            reqRunRateDisplay.textContent = ' | Req R.R: –';  // Target achieved
+          } else {
+            reqRunRateDisplay.textContent = ' | Req R.R: –';  // No balls left
+          }
+        } else {
+          reqRunRateDisplay.textContent = '';  // Hide when not applicable
+        }
+
+        // Update balls remaining display
+        const ballsInOver = document.getElementById('balls-in-over');
+        const ballsInInnings = document.getElementById('balls-in-innings');
+        const inningsBallsContainer = document.getElementById('innings-balls-remaining');
+        const progressContainer = document.getElementById('innings-progress-container');
+        const progressBar = document.getElementById('innings-progress-bar');
+
+        // Always show balls remaining in current over (for umpire)
+        ballsInOver.textContent = `${BALLS_PER_OVER - balls}`;
+
+        // Update target display if set
+        const targetDisplay = document.getElementById('target-display');
+
+        if (targetRuns !== null) {
+          const needed = targetRuns - totalRuns;
+          targetDisplay.classList.remove('d-none');
+
+          // Show balls remaining if overs are set
+          if (totalInningsOvers !== null) {
+            const totalBallsInInnings = totalInningsOvers * BALLS_PER_OVER;
+            const ballsLeft = totalBallsInInnings - ballCount;
+            targetDisplay.innerHTML = `Need <span id="runs-needed">${needed > 0 ? needed : 0}</span> runs in <span id="balls-for-target">${ballsLeft > 0 ? ballsLeft : 0}</span> balls`;
+          } else {
+            // No overs set, just show runs needed
+            targetDisplay.innerHTML = `Need <span id="runs-needed">${needed > 0 ? needed : 0}</span> runs to win`;
+          }
+
+          // Change color based on situation
+          if (needed <= 0) {
+            targetDisplay.className = 'mb-3 text-success fw-bold';  // Won
+          } else if (totalInningsOvers !== null) {
+            const totalBallsInInnings = totalInningsOvers * BALLS_PER_OVER;
+            const ballsLeft = totalBallsInInnings - ballCount;
+            if (ballsLeft <= 0) {
+              targetDisplay.className = 'mb-3 text-danger fw-bold';  // Lost
+            } else {
+              targetDisplay.className = 'mb-3 text-primary fw-bold';  // In progress
+            }
+          } else {
+            targetDisplay.className = 'mb-3 text-primary fw-bold';
+          }
+        } else {
+          targetDisplay.classList.add('d-none');
+        }
+
+        // Show innings info only when total overs are set
+        if (totalInningsOvers !== null) {
+          const totalBallsInInnings = totalInningsOvers * BALLS_PER_OVER;
+          const ballsRemaining = totalBallsInInnings - ballCount;
+
+          // Show innings balls remaining
+          inningsBallsContainer.classList.remove('d-none');
+          ballsInInnings.textContent = ballsRemaining > 0 ? ballsRemaining : 0;
+
+          // Show and update progress bar
+          progressContainer.classList.remove('d-none');
+          const progressPercent = Math.min((ballCount / totalBallsInInnings) * 100, 100);
+          progressBar.style.width = `${progressPercent}%`;
+          progressBar.setAttribute('aria-valuenow', progressPercent);
+
+          // Check if innings is complete
+          if (ballsRemaining <= 0) {
+            ballsInInnings.classList.add('text-danger');
+            progressBar.classList.remove('bg-primary');
+            progressBar.classList.add('bg-success');
+          } else {
+            ballsInInnings.classList.remove('text-danger');
+            progressBar.classList.remove('bg-success');
+            progressBar.classList.add('bg-primary');
+          }
+        } else {
+          // Hide innings info when unlimited overs
+          inningsBallsContainer.classList.add('d-none');
+          progressContainer.classList.add('d-none');
+        }
       }
 
       function updateHistoryVisibility() {
@@ -380,8 +582,8 @@
       }
 
       function appendPill(eventKey, val) {
-        // If the current over already has 6 legitimate balls, start new over
-        if (ballsInThisOver >= 6) {
+        // If the current over already has BALLS_PER_OVER legitimate balls, start new over
+        if (ballsInThisOver >= BALLS_PER_OVER) {
           startNewOver();
         }
 
@@ -417,6 +619,12 @@
           freeHitNext = false;
         }
 
+        // Safety check: ensure currentBallsDiv exists
+        if (!currentBallsDiv) {
+          console.error('currentBallsDiv is null, reinitializing...');
+          currentBallsDiv = createOverGroup(currentOver);
+        }
+
         currentBallsDiv.appendChild(pill);
 
         // Scoring updates
@@ -425,10 +633,11 @@
             totalRuns += val;
             break;
           case 'wicket':
+            totalRuns += val;  // Fix: Add runs scored on wicket ball
             totalWickets += 1;
             break;
           case 'wicket_wide': case 'wicket_noball':
-            totalRuns += 1; totalWickets += 1;
+            totalRuns += val + 1; totalWickets += 1;  // Fix: Include runs from the delivery
             break;
           case 'wicket_bye': case 'wicket_legbye':
             totalRuns += val; totalWickets += 1;
@@ -445,8 +654,11 @@
           case 'run': case 'wide': case 'bye': case 'legbye': case 'noball': case 'penalty':
             runsPerOver[currentOver] += val;
             break;
+          case 'wicket':
+            runsPerOver[currentOver] += val;  // Fix: Include runs scored on wicket ball
+            break;
           case 'wicket_wide': case 'wicket_noball':
-            runsPerOver[currentOver] += 1;
+            runsPerOver[currentOver] += val + 1;  // Fix: Include runs from the delivery
             break;
           case 'wicket_bye': case 'wicket_legbye':
             runsPerOver[currentOver] += val;
@@ -464,7 +676,10 @@
 
         if (['noball', 'wicket_noball'].includes(eventKey)) {
           freeHitNext = true;
-          alert("Signal Free Hit!");
+          // Show toast notification instead of alert
+          const toastEl = document.getElementById('freeHitToast');
+          const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+          toast.show();
         }
 
 
@@ -473,13 +688,37 @@
           ballCount++;
           ballsInThisOver++;
 
-          // Now check if that was the 6th legal ball
-          if (ballsInThisOver >= 6) {
+          // Now check if that was the final legal ball of the over
+          if (ballsInThisOver >= BALLS_PER_OVER) {
             startNewOver();
           }
         }
 
         updateHeader();
+
+        // Check if target is achieved (show toast only once)
+        if (targetRuns !== null && totalRuns >= targetRuns && !targetAchievedNotified) {
+          targetAchievedNotified = true;
+          setTimeout(() => {
+            const toastEl = document.getElementById('targetAchievedToast');
+            const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+            toast.show();
+          }, 500);
+        }
+
+        // Check if innings is complete (show toast only once)
+        if (totalInningsOvers !== null && !inningsCompleteNotified) {
+          const totalBallsInInnings = totalInningsOvers * BALLS_PER_OVER;
+          if (ballCount >= totalBallsInInnings) {
+            inningsCompleteNotified = true;
+            // Show innings complete notification
+            setTimeout(() => {
+              const toastEl = document.getElementById('inningsCompleteToast');
+              const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+              toast.show();
+            }, 500);
+          }
+        }
       }
 
 
@@ -548,32 +787,143 @@
 
       document.getElementById('set-bowler').addEventListener('click', promptBowlerModal);
 
+      // Innings overs modal handlers
+      const inningsModalEl = document.getElementById('inningsModal');
+      const inningsOversInput = document.getElementById('innings-overs-input');
+      const saveInningsOversBtn = document.getElementById('save-innings-overs');
+      const bsInningsModal = new bootstrap.Modal(inningsModalEl);
+
+      document.getElementById('preset-t20').addEventListener('click', () => {
+        inningsOversInput.value = 20;
+      });
+
+      document.getElementById('preset-odi').addEventListener('click', () => {
+        inningsOversInput.value = 50;
+      });
+
+      document.getElementById('preset-test').addEventListener('click', () => {
+        inningsOversInput.value = '';
+        totalInningsOvers = null;
+        inningsCompleteNotified = false;  // Reset notification flag
+        updateHeader();
+        bsInningsModal.hide();
+        saveSession();
+      });
+
+      saveInningsOversBtn.addEventListener('click', () => {
+        const value = parseInt(inningsOversInput.value);
+        if (inningsOversInput.value === '') {
+          totalInningsOvers = null;
+          inningsCompleteNotified = false;  // Reset notification flag
+          updateHeader();
+          bsInningsModal.hide();
+          saveSession();
+        } else if (!isNaN(value) && value > 0 && value <= 200) {
+          totalInningsOvers = value;
+          inningsCompleteNotified = false;  // Reset notification flag when changing overs
+          updateHeader();
+          bsInningsModal.hide();
+          saveSession();
+        } else {
+          alert('Please enter a valid number of overs (1-200).');
+        }
+      });
+
+      // Populate current value when opening innings modal
+      inningsModalEl.addEventListener('show.bs.modal', () => {
+        if (totalInningsOvers !== null) {
+          inningsOversInput.value = totalInningsOvers;
+        } else {
+          inningsOversInput.value = 20;  // Default to T20 format
+        }
+      });
+
+      // Target modal handlers
+      const targetModalEl = document.getElementById('targetModal');
+      const targetRunsInput = document.getElementById('target-runs-input');
+      const saveTargetBtn = document.getElementById('save-target');
+      const clearTargetBtn = document.getElementById('clear-target');
+      const bsTargetModal = new bootstrap.Modal(targetModalEl);
+
+      clearTargetBtn.addEventListener('click', () => {
+        targetRuns = null;
+        targetAchievedNotified = false;  // Reset notification flag
+        targetRunsInput.value = '';
+        updateHeader();
+        bsTargetModal.hide();
+        saveSession();
+      });
+
+      saveTargetBtn.addEventListener('click', () => {
+        const value = parseInt(targetRunsInput.value);
+        if (targetRunsInput.value === '') {
+          targetRuns = null;
+          targetAchievedNotified = false;  // Reset notification flag
+          updateHeader();
+          bsTargetModal.hide();
+          saveSession();
+        } else if (!isNaN(value) && value >= 0 && value <= 9999) {
+          targetRuns = value + 1;  // Target is always opponent's score + 1
+          targetAchievedNotified = false;  // Reset notification flag when changing target
+          updateHeader();
+          bsTargetModal.hide();
+          saveSession();
+        } else {
+          alert('Please enter a valid score (0-9999).');
+        }
+      });
+
+      // Populate current value when opening target modal
+      targetModalEl.addEventListener('show.bs.modal', () => {
+        if (targetRuns !== null) {
+          targetRunsInput.value = targetRuns - 1;  // Show opponent's score, not target
+        } else {
+          targetRunsInput.value = '';
+        }
+      });
+
       bowlerSelect.addEventListener('change', () => {
         saveBowlerBtn.disabled = !bowlerSelect.value;
       });
 
       addNewBowler.addEventListener('click', () => {
-        const name = prompt('Enter new bowler name:');
-        if (name && !bowlerList.includes(name)) {
-          bowlerList.push(name);
-          const o = document.createElement('option');
-          o.value = name; o.textContent = name;
-          bowlerSelect.appendChild(o);
-          bowlerSelect.value = name;
-          saveBowlerBtn.disabled = false;
+        const input = prompt('Enter new bowler name:');
+        if (!input) return;
+
+        // Validate: trim whitespace and check for empty/duplicate
+        const name = input.trim();
+        if (!name) {
+          alert('Bowler name cannot be empty.');
+          return;
         }
+        if (bowlerList.includes(name)) {
+          alert('This bowler already exists.');
+          return;
+        }
+
+        bowlerList.push(name);
+        const o = document.createElement('option');
+        o.value = name; o.textContent = name;
+        bowlerSelect.appendChild(o);
+        bowlerSelect.value = name;
+        saveBowlerBtn.disabled = false;
       });
+
+      let editingOver = null;  // Track which over is being edited
 
       saveBowlerBtn.addEventListener('click', () => {
         const name = bowlerSelect.value;
-        bowlerNames[currentOver] = name;
-        const span = document.querySelector(`#over-${currentOver} .bowler-name`);
-        if (span) span.textContent = name;
+        const targetOver = editingOver || currentOver;
+        bowlerNames[targetOver] = name;
+        const span = document.querySelector(`#over-${targetOver} .bowler-name`);
+        if (span) span.textContent = name;  // Already safe, but keeping consistent
         if (!bowlerList.includes(name)) bowlerList.push(name);
+        editingOver = null;  // Reset editing state
         bsBowlerModal.hide();
       });
 
       function promptBowlerModal() {
+        editingOver = null;  // Not editing, setting for current over
         bowlerOverNum.textContent = currentOver;
         bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
         bowlerList.forEach(name => {
@@ -604,7 +954,7 @@
         bowlerSelect.value = bowlerNames[overNum] || '';
         saveBowlerBtn.disabled = !bowlerSelect.value;
 
-        currentOver = overNum; // Temporarily set currentOver for saving logic
+        editingOver = overNum;  // Fix: Use separate variable instead of modifying currentOver
         bsBowlerModal.show();
       }
 
@@ -614,40 +964,76 @@
       let historyStack = [];
 
       function saveSession() {
-        const session = {
-          totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
-          bowlerNames, bowlerList, freeHitNext,
-          oversHTML: oversContainer.innerHTML,
-          historyStack
-        };
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(session));
+        try {
+          const session = {
+            totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
+            bowlerNames, bowlerList, freeHitNext,
+            oversHTML: oversContainer.innerHTML,
+            historyStack,
+            totalInningsOvers,  // Save innings overs setting
+            targetRuns,  // Save target setting
+            targetAchievedNotified,
+            inningsCompleteNotified,
+            runsPerOver
+          };
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(session));
+        } catch (e) {
+          console.error('Failed to save session to localStorage:', e);
+          // Continue without saving - app still works, just won't persist
+        }
       }
 
       function loadSession() {
-        const saved = localStorage.getItem(LOCAL_KEY);
-        if (!saved) return false;
-        const session = JSON.parse(saved);
-        totalRuns = session.totalRuns;
-        totalWickets = session.totalWickets;
-        ballCount = session.ballCount;
-        ballsInThisOver = session.ballsInThisOver;
-        currentOver = session.currentOver;
-        freeHitNext = session.freeHitNext;
-        Object.assign(bowlerNames, session.bowlerNames);
-        bowlerList.splice(0, bowlerList.length, ...session.bowlerList);
-        oversContainer.innerHTML = session.oversHTML;
-        historyStack = session.historyStack || [];
-        currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
-        updateHeader();
-        updateHistoryVisibility();
-        return true;
+        try {
+          const saved = localStorage.getItem(LOCAL_KEY);
+          if (!saved) return false;
+
+          const session = JSON.parse(saved);
+
+          // Validate session data
+          if (typeof session.totalRuns !== 'number' ||
+              typeof session.ballCount !== 'number' ||
+              typeof session.currentOver !== 'number') {
+            console.warn('Invalid session data, starting fresh');
+            return false;
+          }
+
+          totalRuns = session.totalRuns;
+          totalWickets = session.totalWickets;
+          ballCount = session.ballCount;
+          ballsInThisOver = session.ballsInThisOver;
+          currentOver = session.currentOver;
+          freeHitNext = session.freeHitNext;
+          totalInningsOvers = session.totalInningsOvers !== undefined ? session.totalInningsOvers : null;
+          targetRuns = session.targetRuns !== undefined ? session.targetRuns : null;
+          targetAchievedNotified = session.targetAchievedNotified || false;
+          inningsCompleteNotified = session.inningsCompleteNotified || false;
+          Object.assign(bowlerNames, session.bowlerNames);
+          bowlerList.splice(0, bowlerList.length, ...session.bowlerList);
+          oversContainer.innerHTML = session.oversHTML;
+          historyStack = session.historyStack || [];
+          if (session.runsPerOver) {
+            runsPerOver = { ...session.runsPerOver };
+          }
+          currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
+          updateHeader();
+          updateHistoryVisibility();
+          return true;
+        } catch (e) {
+          console.error('Failed to load session from localStorage:', e);
+          return false;
+        }
       }
 
       function pushToHistory() {
         const snapshot = {
           totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
           oversHTML: oversContainer.innerHTML,
-          freeHitNext, runsPerOver: { ...runsPerOver }
+          freeHitNext, runsPerOver: { ...runsPerOver },
+          totalInningsOvers,  // Include innings overs in history
+          targetRuns,  // Include target in history
+          targetAchievedNotified,
+          inningsCompleteNotified
         };
         historyStack.push(JSON.parse(JSON.stringify(snapshot)));
         saveSession();
@@ -664,6 +1050,10 @@
         currentOver = prev.currentOver;
         freeHitNext = prev.freeHitNext;
         runsPerOver = { ...prev.runsPerOver };
+        totalInningsOvers = prev.totalInningsOvers !== undefined ? prev.totalInningsOvers : null;
+        targetRuns = prev.targetRuns !== undefined ? prev.targetRuns : null;
+        targetAchievedNotified = prev.targetAchievedNotified || false;
+        inningsCompleteNotified = prev.inningsCompleteNotified || false;
 
         oversContainer.innerHTML = prev.oversHTML;
         currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
@@ -674,7 +1064,22 @@
 
       function resetGame() {
         if (!confirm('Reset the match and clear all progress?')) return;
-        localStorage.removeItem(LOCAL_KEY);
+        try {
+          localStorage.removeItem(LOCAL_KEY);
+        } catch (e) {
+          console.error('Failed to clear localStorage:', e);
+        }
+        // Reset all state variables
+        totalRuns = 0;
+        totalWickets = 0;
+        ballCount = 0;
+        currentOver = 1;
+        ballsInThisOver = 0;
+        freeHitNext = false;
+        totalInningsOvers = null;
+        targetRuns = null;
+        targetAchievedNotified = false;
+        inningsCompleteNotified = false;
         runsPerOver = { 1: 0 };
         location.reload();
       }
@@ -682,10 +1087,15 @@
       document.getElementById('show-bowling').addEventListener('click', generateBowlingStats);
 
       function generateBowlingStats() {
-        const tbody = document.getElementById('bowling-stats-body');
-        tbody.innerHTML = ''; // Clear previous
+        try {
+          const tbody = document.getElementById('bowling-stats-body');
+          if (!tbody) {
+            console.error('Bowling stats table body not found');
+            return;
+          }
+          tbody.innerHTML = ''; // Clear previous
 
-        const bowlerStats = {};
+          const bowlerStats = {};
 
         // Loop through overs
         document.querySelectorAll('#overs-container > div').forEach(overEl => {
@@ -704,8 +1114,9 @@
 
           balls.forEach(pill => {
             const text = pill.innerText.toUpperCase();
-            const isWicket = [...text].some((ch, i) => ch === 'W' && text[i + 1] !== 'D');
+            // Fix: Properly detect wickets (W but not WD)
             const isWide = text.includes('WD');
+            const isWicket = text.includes('W') && !isWide;
             const isNoBall = text.includes('NB');
             const isBye = text.includes('B') || text.includes('LB');
             const runMatch = text.match(/\d+/);
@@ -729,31 +1140,51 @@
             }
           });
 
-          // Count overs only if there were 6 legal deliveries
-          if (legalBallsThisOver === 6) {
+          // Count complete overs and track partial overs
+          if (legalBallsThisOver === BALLS_PER_OVER) {
             bowlerStats[bowler].overs += 1;
-
-            // Optional: show maiden as 0 runs
-            if (overRuns === 0) {
-              // Optionally flag this as a maiden
-              // Currently, we're treating it as 0 run over
-            }
+          } else if (legalBallsThisOver > 0) {
+            // Track partial over balls separately
+            bowlerStats[bowler].partialBalls = (bowlerStats[bowler].partialBalls || 0) + legalBallsThisOver;
           }
         });
 
         // Render stats
         Object.entries(bowlerStats).forEach(([bowler, data]) => {
+          // Format overs display (e.g., "2.3" for 2 complete overs + 3 balls)
+          let oversDisplay = data.overs.toString();
+          if (data.partialBalls > 0) {
+            oversDisplay += `.${data.partialBalls}`;
+          }
+
           const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${bowler}</td>
-            <td>${data.overs}</td>
-            <td>${data.runs}</td>
-            <td>${data.wickets}</td>
-            <td>${data.wd}</td>
-            <td>${data.nb}</td>
-          `;
+          // Use textContent for bowler name to prevent XSS
+          const td1 = document.createElement('td');
+          td1.textContent = bowler;
+          const td2 = document.createElement('td');
+          td2.textContent = oversDisplay;
+          const td3 = document.createElement('td');
+          td3.textContent = data.runs;
+          const td4 = document.createElement('td');
+          td4.textContent = data.wickets;
+          const td5 = document.createElement('td');
+          td5.textContent = data.wd;
+          const td6 = document.createElement('td');
+          td6.textContent = data.nb;
+
+          row.appendChild(td1);
+          row.appendChild(td2);
+          row.appendChild(td3);
+          row.appendChild(td4);
+          row.appendChild(td5);
+          row.appendChild(td6);
+
           tbody.appendChild(row);
         });
+        } catch (e) {
+          console.error('Error generating bowling stats:', e);
+          alert('Error calculating bowling statistics. Please check the data.');
+        }
       }
 
 
