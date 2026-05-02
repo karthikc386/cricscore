@@ -7,7 +7,7 @@
   <title>CricScore</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    /* === Optimized for Sunlight === */
+    /* === Optimized for Sunlight on Mobile === */
     body {
       background-color: #ffffff;
       color: #000000;
@@ -15,15 +15,16 @@
 
     /* === Score Section === */
     #score-header {
-      font-size: 4rem;
+      font-size: 3rem;
       font-weight: 900;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     main p {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       font-weight: 700;
+      line-height: 1.4;
     }
 
     #overs-display,
@@ -36,7 +37,7 @@
     }
 
     #target-display {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: 900;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
@@ -46,12 +47,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.75rem 1rem;
-      min-width: 55px;
-      height: 55px;
+      padding: 0.6rem 0.8rem;
+      min-width: 48px;
+      height: 48px;
       border-radius: 0.5rem;
       font-weight: 900;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       color: white;
       white-space: nowrap;
       border: 2px solid rgba(0,0,0,0.2);
@@ -99,34 +100,35 @@
 
     #overs-container h5 {
       font-weight: 800;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       color: #000000;
     }
 
     .free-hit {
-      border: 4px solid #06b6d4 !important;
-      box-shadow: 0 0 8px #06b6d4;
+      border: 3px solid #06b6d4 !important;
+      box-shadow: 0 0 6px #06b6d4;
     }
 
     #overs-container .d-flex {
-      padding-top: 0.5rem;
+      padding-top: 0.4rem;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
-    /* === Larger Buttons for Outdoor Use === */
+    /* === Buttons Optimized for Mobile Touch === */
     .btn {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: 700;
-      padding: 1rem 0.75rem;
+      padding: 0.85rem 0.6rem;
       border-width: 2px;
-      min-height: 60px;
+      min-height: 52px;
     }
 
     @media (min-width: 768px) {
       .btn {
-        font-size: 1.3rem;
-        padding: 1.1rem 1rem;
+        font-size: 1.1rem;
+        padding: 1rem 0.75rem;
+        min-height: 56px;
       }
     }
 
@@ -171,46 +173,46 @@
 
     .modal-title {
       font-weight: 800;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       color: #000000;
     }
 
     .modal-body {
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
 
     .modal-body button.btn {
-      padding: 0.75rem 1.25rem;
-      font-size: 1.2rem;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
       font-weight: 700;
-      min-height: 55px;
+      min-height: 50px;
     }
 
     .modal-body .form-control,
     .modal-body .form-select {
-      font-size: 1.2rem;
-      padding: 0.75rem;
+      font-size: 1.05rem;
+      padding: 0.65rem;
       font-weight: 600;
       border-width: 2px;
     }
 
     .modal-body label {
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #000000;
     }
 
     #option-list .btn+.btn {
-      margin-top: 0.75rem;
+      margin-top: 0.6rem;
     }
 
     /* Navbar */
     .navbar {
-      min-height: 70px;
+      min-height: 60px;
     }
 
     .navbar-brand {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: 900;
     }
 
@@ -226,7 +228,7 @@
 
     /* Table - high contrast */
     .table {
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 600;
     }
 
@@ -237,7 +239,7 @@
     }
 
     .table td {
-      padding: 0.75rem;
+      padding: 0.6rem;
       border-width: 2px;
     }
 
@@ -265,7 +267,7 @@
 
     /* Improve small text readability */
     small {
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 700;
     }
   </style>
@@ -313,13 +315,13 @@
     <p id="target-display" class="mb-3 text-primary fw-bold d-none">Need <span id="runs-needed">0</span> runs in <span id="balls-for-target">0</span> balls</p>
 
     <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-      <button id="toggle-history" class="btn btn-outline-secondary" style="min-width: 140px;">Show History</button>
-      <button id="show-bowling" class="btn btn-outline-info" data-bs-toggle="modal"
-        data-bs-target="#bowlingModal" style="min-width: 120px;">Bowling</button>
-      <button id="set-innings-overs" class="btn btn-outline-primary" data-bs-toggle="modal"
-        data-bs-target="#inningsModal" style="min-width: 130px;">Set Overs</button>
-      <button id="set-target" class="btn btn-outline-success" data-bs-toggle="modal"
-        data-bs-target="#targetModal" style="min-width: 130px;">Set Target</button>
+      <button id="toggle-history" class="btn btn-outline-secondary btn-sm" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Show History</button>
+      <button id="show-bowling" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
+        data-bs-target="#bowlingModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Bowling</button>
+      <button id="set-innings-overs" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+        data-bs-target="#inningsModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Set Overs</button>
+      <button id="set-target" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+        data-bs-target="#targetModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Set Target</button>
     </div>
 
     <div id="overs-container" class="mt-3">
