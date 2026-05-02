@@ -7,98 +7,266 @@
   <title>CricScore</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
+    /* === Optimized for Sunlight === */
+    body {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
     /* === Score Section === */
     #score-header {
-      font-size: 2.5rem;
+      font-size: 4rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      letter-spacing: 0.05em;
+    }
+
+    main p {
+      font-size: 1.3rem;
+      font-weight: 700;
     }
 
     #overs-display,
     #run-rate-display,
-    #balls-to-go {
-      font-weight: 600;
+    #balls-to-go,
+    #balls-in-over,
+    #balls-in-innings {
+      font-weight: 900;
+      color: #000000;
     }
 
-    /* === Ball Pills (each ball in an over) === */
+    #target-display {
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* === Ball Pills (each ball in an over) - High Contrast for Sunlight === */
     .ball-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 0.75rem;
-      height: 42px;
+      padding: 0.75rem 1rem;
+      min-width: 55px;
+      height: 55px;
       border-radius: 0.5rem;
-      font-weight: bold;
-      font-size: 1rem;
+      font-weight: 900;
+      font-size: 1.3rem;
       color: white;
-      white-space: nowrap; 
+      white-space: nowrap;
+      border: 2px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .ball-run {
-      background-color: #cbccce;
+      background-color: #2c3e50;
+      color: #ffffff;
     }
 
     .ball-fourrun {
-      background-color: #0ec281;
+      background-color: #00a651;
+      color: #ffffff;
     }
 
     .ball-sixrun {
-      background-color: #7a41d8;
+      background-color: #5b21b6;
+      color: #ffffff;
     }
 
     .ball-wicket {
-      background-color: #e44242;
+      background-color: #dc2626;
+      color: #ffffff;
     }
 
     .ball-wide,
     .ball-noball,
     .ball-penalty {
-      background-color: #ffc107;
-      color: black;
+      background-color: #f59e0b;
+      color: #000000;
+      font-weight: 900;
     }
 
     .ball-bye,
     .ball-legbye {
-      background-color: #6c757d;
+      background-color: #374151;
+      color: #ffffff;
     }
 
     .ball-default {
-      background-color: #adb5bd;
+      background-color: #6b7280;
+      color: #ffffff;
     }
 
     #overs-container h5 {
-      font-weight: 600;
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #000000;
     }
 
     .free-hit {
-      border: 2px solid #0dcaf0 !important;
+      border: 4px solid #06b6d4 !important;
+      box-shadow: 0 0 8px #06b6d4;
     }
 
     #overs-container .d-flex {
-      padding-top: 0.25rem;
+      padding-top: 0.5rem;
       flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
+    /* === Larger Buttons for Outdoor Use === */
     .btn {
-      font-size: 1rem;
-      padding: 0.75rem 0.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1rem 0.75rem;
+      border-width: 2px;
+      min-height: 60px;
     }
 
     @media (min-width: 768px) {
       .btn {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
+        padding: 1.1rem 1rem;
       }
     }
 
+    /* High contrast button styles */
+    .btn-outline-primary {
+      border-color: #1d4ed8;
+      color: #1d4ed8;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-primary:active {
+      background-color: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+
+    .btn-outline-danger {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    .btn-outline-danger:hover,
+    .btn-outline-danger:active {
+      background-color: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .btn-outline-dark {
+      border-color: #1f2937;
+      color: #1f2937;
+    }
+
+    .btn-outline-warning {
+      border-color: #f59e0b;
+      color: #000000;
+      background-color: #fef3c7;
+    }
+
+    .btn-outline-success {
+      border-color: #059669;
+      color: #059669;
+    }
+
     .modal-title {
-      font-weight: 600;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #000000;
+    }
+
+    .modal-body {
+      font-size: 1.1rem;
     }
 
     .modal-body button.btn {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+      padding: 0.75rem 1.25rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      min-height: 55px;
+    }
+
+    .modal-body .form-control,
+    .modal-body .form-select {
+      font-size: 1.2rem;
+      padding: 0.75rem;
+      font-weight: 600;
+      border-width: 2px;
+    }
+
+    .modal-body label {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #000000;
     }
 
     #option-list .btn+.btn {
-      margin-top: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    /* Navbar */
+    .navbar {
+      min-height: 70px;
+    }
+
+    .navbar-brand {
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
+
+    /* Progress bar - high visibility */
+    .progress {
+      background-color: #e5e7eb;
+      border: 2px solid #000000;
+    }
+
+    .progress-bar {
+      font-weight: 900;
+    }
+
+    /* Table - high contrast */
+    .table {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .table thead {
+      background-color: #1f2937 !important;
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .table td {
+      padding: 0.75rem;
+      border-width: 2px;
+    }
+
+    /* Override Bootstrap muted text for sunlight visibility */
+    .text-muted {
+      color: #000000 !important;
+      opacity: 0.85;
+    }
+
+    /* High contrast colors for status displays */
+    .text-primary {
+      color: #1d4ed8 !important;
+      font-weight: 900 !important;
+    }
+
+    .text-success {
+      color: #047857 !important;
+      font-weight: 900 !important;
+    }
+
+    .text-danger {
+      color: #dc2626 !important;
+      font-weight: 900 !important;
+    }
+
+    /* Improve small text readability */
+    small {
+      font-size: 1rem;
+      font-weight: 700;
     }
   </style>
 </head>
@@ -106,12 +274,12 @@
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar navbar-dark bg-primary">
+  <nav class="navbar navbar-dark" style="background-color: #1f2937;">
     <div class="container-fluid">
-      <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+      <button class="btn" style="background-color: #374151; color: white; border: 2px solid white;" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand ms-2" href="#">CricScore</a>
+      <a class="navbar-brand ms-2" href="#" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🏏 CricScore</a>
     </div>
   </nav>
 
@@ -144,14 +312,14 @@
     <p id="innings-balls-remaining" class="mb-1 text-muted d-none"><b>Balls Remaining in Innings: <span id="balls-in-innings">0</span></b></p>
     <p id="target-display" class="mb-3 text-primary fw-bold d-none">Need <span id="runs-needed">0</span> runs in <span id="balls-for-target">0</span> balls</p>
 
-    <div class="d-flex justify-content-center gap-2 mb-3">
-      <button id="toggle-history" class="btn btn-sm btn-outline-secondary">Show History</button>
-      <button id="show-bowling" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
-        data-bs-target="#bowlingModal">Bowling</button>
-      <button id="set-innings-overs" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-        data-bs-target="#inningsModal">Set Overs</button>
-      <button id="set-target" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
-        data-bs-target="#targetModal">Set Target</button>
+    <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+      <button id="toggle-history" class="btn btn-outline-secondary" style="min-width: 140px;">Show History</button>
+      <button id="show-bowling" class="btn btn-outline-info" data-bs-toggle="modal"
+        data-bs-target="#bowlingModal" style="min-width: 120px;">Bowling</button>
+      <button id="set-innings-overs" class="btn btn-outline-primary" data-bs-toggle="modal"
+        data-bs-target="#inningsModal" style="min-width: 130px;">Set Overs</button>
+      <button id="set-target" class="btn btn-outline-success" data-bs-toggle="modal"
+        data-bs-target="#targetModal" style="min-width: 130px;">Set Target</button>
     </div>
 
     <div id="overs-container" class="mt-3">
@@ -161,7 +329,7 @@
 
   <!-- Action Buttons Grid -->
   <div class="container mb-5">
-    <div class="row row-cols-3 g-3 text-center">
+    <div class="row row-cols-3 g-4 text-center">
       <div class="col">
         <button class="btn btn-outline-primary w-100 event-trigger" data-event="run" data-bs-toggle="modal"
           data-bs-target="#eventModal">Run</button>
