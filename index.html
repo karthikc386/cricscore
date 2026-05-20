@@ -299,7 +299,7 @@
   </div>
 
   <!-- Main Scoreboard -->
-  <main class="container my-4 text-center">
+  <main class="container my-1 text-center">
     <h1 id="score-header" class="display-4 fw-bold">0/0</h1>
     <p class="mb-1 fs-5">Overs: <span id="overs-display">0.0</span><span id="total-overs-display"></span> | R.R: <span id="run-rate-display">–</span><span id="req-run-rate-display"></span></p>
 
@@ -315,13 +315,13 @@
     <p id="target-display" class="mb-3 text-primary fw-bold d-none">Need <span id="runs-needed">0</span> runs in <span id="balls-for-target">0</span> balls</p>
 
     <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-      <button id="toggle-history" class="btn btn-outline-secondary btn-sm" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Show History</button>
       <button id="show-bowling" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
-        data-bs-target="#bowlingModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Bowling</button>
+        data-bs-target="#bowlingModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Bowl</button>
       <button id="set-innings-overs" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-        data-bs-target="#inningsModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Set Overs</button>
+        data-bs-target="#inningsModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Overs</button>
       <button id="set-target" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-        data-bs-target="#targetModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Set Target</button>
+        data-bs-target="#targetModal" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Target</button>
+      <button id="toggle-history" class="btn btn-outline-secondary btn-sm" style="font-size: 0.9rem; font-weight: 700; padding: 0.5rem 0.75rem;">Show Overs</button>
     </div>
 
     <div id="overs-container" class="mt-3">
@@ -565,6 +565,7 @@
       let targetRuns = null;  // null means no target set (batting first)
       let targetAchievedNotified = false;  // Prevent toast spam
       let inningsCompleteNotified = false;  // Prevent toast spam
+      let umpireSpeechEnabled = true;
 
       const oversContainer = document.getElementById('overs-container'),
         scoreHeader = document.getElementById('score-header'),
@@ -582,6 +583,24 @@
         saveBowlerBtn = document.getElementById('save-bowler'),
         bowlerOverNum = document.getElementById('bowler-over-number'),
         bsBowlerModal = new bootstrap.Modal(bowlerModalEl);
+
+      function speakUmpireNotice(message, options = {}) {
+        if (!umpireSpeechEnabled || !('speechSynthesis' in window)) return;
+
+        if (options.interrupt) {
+          window.speechSynthesis.cancel();
+        }
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'en-US';
+        utterance.rate = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      window.speakUmpireNotice = speakUmpireNotice;
+      window.setUmpireSpeechEnabled = (enabled) => {
+        umpireSpeechEnabled = Boolean(enabled);
+      };
 
       function createOverGroup(n) {
         const g = document.createElement('div');
@@ -738,9 +757,9 @@
         const groups = Array.from(oversContainer.children);
         groups.forEach((g, i) => {
           if (showHistory) g.classList.remove('d-none');
-          else g.classList.toggle('d-none', i < groups.length - 2);
+          else g.classList.toggle('d-none', i < groups.length - 1);
         });
-        toggleHistBtn.textContent = showHistory ? 'Hide History' : 'Show History';
+        toggleHistBtn.textContent = showHistory ? 'Hide Overs' : 'Show Overs';
       }
 
       function startNewOver() {
@@ -844,12 +863,19 @@
         }
 
 
-        if (['noball', 'wicket_noball'].includes(eventKey)) {
+        if (['bye', 'wicket_bye'].includes(eventKey)) {
+          speakUmpireNotice('Signal bye.');
+        } else if (['legbye', 'wicket_legbye'].includes(eventKey)) {
+          speakUmpireNotice('Signal leg bye.');
+        }
+
+        if (['noball', 'wicket_noball', 'noball_bye', 'noball_legbye'].includes(eventKey)) {
           freeHitNext = true;
           // Show toast notification instead of alert
           const toastEl = document.getElementById('freeHitToast');
           const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
           toast.show();
+          speakUmpireNotice('Free hit next ball.');
         }
 
 
@@ -861,6 +887,8 @@
           // Now check if that was the final legal ball of the over
           if (ballsInThisOver >= BALLS_PER_OVER) {
             startNewOver();
+          } else if (ballsInThisOver === BALLS_PER_OVER - 1) {
+            speakUmpireNotice('One ball remaining in the over.');
           }
         }
 
@@ -1109,6 +1137,7 @@
         } else {
           bowlerSelect.value = '';
           saveBowlerBtn.disabled = true;
+          speakUmpireNotice('Set bowler for this over.');
         }
         bsBowlerModal.show();
       }
