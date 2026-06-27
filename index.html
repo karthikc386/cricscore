@@ -779,7 +779,14 @@
       }
 
       function startNewOver() {
+        // Announce the completion of the previous over, then start the next
+        const finishedOver = currentOver;
         currentOver++; ballsInThisOver = 0;
+
+        // Speak summary for the over that just finished so the fielding captain can verify
+        const runsThisOver = runsPerOver[finishedOver] || 0;
+        speakUmpireNotice(`End of over ${finishedOver}. ${runsThisOver} runs in that over. Score ${totalRuns} for ${totalWickets}. Fielding captain, please check the scoreboard.`);
+
         runsPerOver[currentOver] = 0;
         currentBallsDiv = createOverGroup(currentOver);
         promptBowlerModal();
@@ -840,6 +847,8 @@
           case 'wicket':
             totalRuns += val;  // Fix: Add runs scored on wicket ball
             totalWickets += 1;
+            // Announce wicket and remind scorer to confirm strike change
+            speakUmpireNotice('Wicket! Please confirm the incoming batsman and verify the strike.');
             break;
           case 'wicket_wide': case 'wicket_noball':
             totalRuns += val + 1; totalWickets += 1;  // Fix: Include runs from the delivery
