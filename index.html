@@ -467,10 +467,22 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <label for="team-select" class="form-label">Select Team</label>
+          <div class="d-flex gap-2 mb-3">
+            <select id="team-select" class="form-select">
+              <option value="" disabled selected>Select team</option>
+            </select>
+            <button type="button" id="apply-team" class="btn btn-sm btn-outline-secondary">Set Team</button>
+          </div>
+          <label for="manual-bowler-input" class="form-label">Or Enter Player Manually</label>
+          <div class="input-group mb-3">
+            <input type="text" id="manual-bowler-input" class="form-control" placeholder="Enter player name">
+            <button type="button" id="add-new-bowler" class="btn btn-outline-primary">Add</button>
+          </div>
+          <label for="bowler-select" class="form-label">Select Bowler</label>
           <select id="bowler-select" class="form-select mb-2">
             <option value="" disabled>Select bowler</option>
           </select>
-          <button type="button" id="add-new-bowler" class="btn btn-sm btn-outline-primary">Add New Bowler</button>
         </div>
         <div class="modal-footer">
           <button type="button" id="save-bowler" class="btn btn-primary" disabled>Save</button>
@@ -572,7 +584,19 @@
 
       let totalRuns = 0, totalWickets = 0, ballCount = 0;
       let currentOver = 1, ballsInThisOver = 0;
+      let selectedTeam = null;
       const bowlerNames = {}, bowlerList = [];
+      const manualBowlerNames = [];
+      const teamPlayers = {
+        YCW: ['Junaid', 'Shaheer', 'Kashyap', 'Chetan', 'Lyron', 'Bhagya', 'Zeeshan', 'Venkat', 'Shahidullah'],
+        WARRIORS: ['Sourav', 'Srikanth', 'Charan', 'Ranbir', 'Pavan', 'Shilin', 'Rajdev', 'Karan'],
+        TIGERS: ['Sunny', 'Devan', 'Bhaumik', 'Sabeel', 'Ahamed', 'Manvinder', 'Parth', 'Pranjal'],
+        Thunder: ['Sujith', 'Chamika', 'Dinush', 'Sai Abhijith', 'Bhavik', 'Ruvindra', 'Bhanu'],
+        'Super Kings': ['Chandrakanth', 'Hanumanth', 'Nazir', 'Bobby', 'Wahid', 'Srini', 'Ashish', 'Karthik', 'Chandan Reddy'],
+        PUNJAB: ['Baltej', 'Kiran', 'Imran', 'Burhan', 'Muhammad', 'Deepak', 'Humail'],
+        MCC: ['Arvind', 'Ershad', 'Benhur', 'Shaheer', 'Zohaib', 'Manju', 'Emad Khan'],
+        GYMKHANA: ['Hamza', 'Gaurav', 'Suren', 'Nouman', 'Omar', 'Zia', 'Qasim', 'Rahul', 'Siddharth']
+      };
       const legitBalls = new Set(['run', 'wicket', 'bye', 'legbye']);
       let freeHitNext = false, showHistory = false;
       let currentEventKey, currentBallsDiv;
@@ -594,6 +618,7 @@
         otherSubmit = document.getElementById('other-submit'),
         bsEventModal = new bootstrap.Modal(eventModalEl),
         bowlerModalEl = document.getElementById('bowlerModal'),
+        teamSelect = document.getElementById('team-select'),
         bowlerSelect = document.getElementById('bowler-select'),
         addNewBowler = document.getElementById('add-new-bowler'),
         saveBowlerBtn = document.getElementById('save-bowler'),
@@ -785,7 +810,7 @@
 
         // Speak summary for the over that just finished so the fielding captain can verify
         const runsThisOver = runsPerOver[finishedOver] || 0;
-        speakUmpireNotice(`End of over ${finishedOver}. ${runsThisOver} runs in that over. Score ${totalRuns} for ${totalWickets}. Fielding captain, please check the scoreboard.`);
+        speakUmpireNotice(`End of over ${finishedOver}. ${runsThisOver} runs in that over. Score ${totalRuns} for ${totalWickets}.`);
 
         runsPerOver[currentOver] = 0;
         currentBallsDiv = createOverGroup(currentOver);
@@ -1105,31 +1130,85 @@
         }
       });
 
+      function populateTeamOptions() {
+        teamSelect.innerHTML = '<option value="" disabled selected>Select team</option>';
+        Object.keys(teamPlayers).forEach(teamName => {
+          const option = document.createElement('option');
+          option.value = teamName;
+          option.textContent = teamName;
+          teamSelect.appendChild(option);
+        });
+        teamSelect.value = selectedTeam || '';
+      }
+
+      function syncBowlerListWithTeam() {
+        const combined = [];
+        if (selectedTeam && teamPlayers[selectedTeam]) {
+          teamPlayers[selectedTeam].forEach(playerName => {
+            if (!combined.includes(playerName)) combined.push(playerName);
+          });
+        }
+        manualBowlerNames.forEach(playerName => {
+          if (!combined.includes(playerName)) combined.push(playerName);
+        });
+        bowlerList.splice(0, bowlerList.length, ...combined);
+      }
+
+      function renderBowlerOptions(selectedValue = '') {
+        bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
+        bowlerList.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          bowlerSelect.appendChild(option);
+        });
+
+        if (selectedValue && bowlerList.includes(selectedValue)) {
+          bowlerSelect.value = selectedValue;
+        } else {
+          bowlerSelect.value = '';
+        }
+        saveBowlerBtn.disabled = !bowlerSelect.value;
+      }
+
+      function applySelectedTeam() {
+        const teamName = teamSelect.value;
+        if (!teamName) {
+          alert('Please select a team first.');
+          return;
+        }
+        selectedTeam = teamName;
+        syncBowlerListWithTeam();
+        renderBowlerOptions('');
+        saveSession();
+        speakUmpireNotice(`Team ${teamName} selected.`);
+      }
+
+      populateTeamOptions();
+
+      document.getElementById('apply-team').addEventListener('click', applySelectedTeam);
+
       bowlerSelect.addEventListener('change', () => {
         saveBowlerBtn.disabled = !bowlerSelect.value;
       });
 
       addNewBowler.addEventListener('click', () => {
-        const input = prompt('Enter new bowler name:');
-        if (!input) return;
-
-        // Validate: trim whitespace and check for empty/duplicate
-        const name = input.trim();
+        const input = document.getElementById('manual-bowler-input');
+        const name = input.value.trim();
         if (!name) {
-          alert('Bowler name cannot be empty.');
+          alert('Player name cannot be empty.');
           return;
         }
-        if (bowlerList.includes(name)) {
-          alert('This bowler already exists.');
+        if (manualBowlerNames.includes(name) || bowlerList.includes(name)) {
+          alert('This player already exists.');
           return;
         }
 
-        bowlerList.push(name);
-        const o = document.createElement('option');
-        o.value = name; o.textContent = name;
-        bowlerSelect.appendChild(o);
-        bowlerSelect.value = name;
-        saveBowlerBtn.disabled = false;
+        manualBowlerNames.push(name);
+        syncBowlerListWithTeam();
+        renderBowlerOptions(name);
+        input.value = '';
+        saveSession();
       });
 
       let editingOver = null;  // Track which over is being edited
@@ -1140,7 +1219,10 @@
         bowlerNames[targetOver] = name;
         const span = document.querySelector(`#over-${targetOver} .bowler-name`);
         if (span) span.textContent = name;  // Already safe, but keeping consistent
-        if (!bowlerList.includes(name)) bowlerList.push(name);
+        if (!bowlerList.includes(name) && !manualBowlerNames.includes(name)) {
+          manualBowlerNames.push(name);
+          syncBowlerListWithTeam();
+        }
         editingOver = null;  // Reset editing state
         bsBowlerModal.hide();
       });
@@ -1148,18 +1230,10 @@
       function promptBowlerModal() {
         editingOver = null;  // Not editing, setting for current over
         bowlerOverNum.textContent = currentOver;
-        bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
-        bowlerList.forEach(name => {
-          const o = document.createElement('option');
-          o.value = name; o.textContent = name;
-          bowlerSelect.appendChild(o);
-        });
-        if (bowlerNames[currentOver]) {
-          setTimeout(() => {
-            bowlerSelect.value = bowlerNames[currentOver];
-            saveBowlerBtn.disabled = false;
-          }, 0);
-        } else {
+        teamSelect.value = selectedTeam || '';
+        syncBowlerListWithTeam();
+        renderBowlerOptions(bowlerNames[currentOver] || '');
+        if (!bowlerNames[currentOver]) {
           bowlerSelect.value = '';
           saveBowlerBtn.disabled = true;
           speakUmpireNotice('Set bowler for this over.');
@@ -1169,15 +1243,9 @@
 
       function promptBowlerEditModal(overNum) {
         bowlerOverNum.textContent = overNum;
-        bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
-        bowlerList.forEach(name => {
-          const o = document.createElement('option');
-          o.value = name; o.textContent = name;
-          bowlerSelect.appendChild(o);
-        });
-        bowlerSelect.value = bowlerNames[overNum] || '';
-        saveBowlerBtn.disabled = !bowlerSelect.value;
-
+        teamSelect.value = selectedTeam || '';
+        syncBowlerListWithTeam();
+        renderBowlerOptions(bowlerNames[overNum] || '');
         editingOver = overNum;  // Fix: Use separate variable instead of modifying currentOver
         bsBowlerModal.show();
       }
@@ -1192,6 +1260,7 @@
           const session = {
             totalRuns, totalWickets, ballCount, ballsInThisOver, currentOver,
             bowlerNames, bowlerList, freeHitNext,
+            selectedTeam, manualBowlerNames,
             oversHTML: oversContainer.innerHTML,
             historyStack,
             totalInningsOvers,  // Save innings overs setting
@@ -1232,8 +1301,10 @@
           targetRuns = session.targetRuns !== undefined ? session.targetRuns : null;
           targetAchievedNotified = session.targetAchievedNotified || false;
           inningsCompleteNotified = session.inningsCompleteNotified || false;
+          selectedTeam = session.selectedTeam || null;
+          manualBowlerNames.splice(0, manualBowlerNames.length, ...(session.manualBowlerNames || []));
           Object.assign(bowlerNames, session.bowlerNames);
-          bowlerList.splice(0, bowlerList.length, ...session.bowlerList);
+          syncBowlerListWithTeam();
           oversContainer.innerHTML = session.oversHTML;
           historyStack = session.historyStack || [];
           if (session.runsPerOver) {
