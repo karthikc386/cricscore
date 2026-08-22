@@ -393,7 +393,7 @@
   </div>
 
   <!-- Event Modal -->
-  <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="eventModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -412,7 +412,7 @@
   </div>
 
   <!-- Target Modal -->
-  <div class="modal fade" id="targetModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="targetModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -435,7 +435,7 @@
   </div>
 
   <!-- Innings Overs Modal -->
-  <div class="modal fade" id="inningsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="inningsModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -459,7 +459,7 @@
   </div>
 
   <!-- Bowler Modal -->
-  <div class="modal fade" id="bowlerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="bowlerModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -492,7 +492,7 @@
   </div>
 
   <!-- Bowling Stats Modal -->
-  <div class="modal fade" id="bowlingModal" tabindex="-1" aria-labelledby="bowlingModalLabel" aria-hidden="true">
+  <div class="modal fade" id="bowlingModal" tabindex="-1" aria-labelledby="bowlingModalLabel">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -581,6 +581,8 @@
       };
 
       const BALLS_PER_OVER = 6;  // Named constant instead of magic number
+      const MATCH_NUMBER_WORDS = {4: 'Four', 8: 'Eight', 12: 'Twelve', 16: 'Sixteen', 20: 'Twenty'};
+      const ANNOUNCE_OVERS = new Set([4, 8, 12, 16, 20]);
 
       let totalRuns = 0, totalWickets = 0, ballCount = 0;
       let currentOver = 1, ballsInThisOver = 0;
@@ -588,13 +590,13 @@
       const bowlerNames = {}, bowlerList = [];
       const manualBowlerNames = [];
       const teamPlayers = {
-        YCW: ['Junaid', 'Shaheer', 'Kashyap', 'Chetan', 'Lyron', 'Bhagya', 'Zeeshan', 'Venkat', 'Shahidullah'],
-        WARRIORS: ['Sourav', 'Srikanth', 'Charan', 'Ranbir', 'Pavan', 'Shilin', 'Rajdev', 'Karan'],
-        TIGERS: ['Sunny', 'Devan', 'Bhaumik', 'Sabeel', 'Ahamed', 'Manvinder', 'Parth', 'Pranjal'],
-        Thunder: ['Sujith', 'Chamika', 'Dinush', 'Sai Abhijith', 'Bhavik', 'Ruvindra', 'Bhanu'],
-        'Super Kings': ['Chandrakanth', 'Hanumanth', 'Nazir', 'Bobby', 'Wahid', 'Srini', 'Ashish', 'Karthik', 'Chandan Reddy'],
-        PUNJAB: ['Baltej', 'Kiran', 'Imran', 'Burhan', 'Muhammad', 'Deepak', 'Humail'],
-        MCC: ['Arvind', 'Ershad', 'Benhur', 'Shaheer', 'Zohaib', 'Manju', 'Emad Khan'],
+        YCW: ['Junaid', 'Shaheer', 'Kashyap', 'Chetan', 'Lyron', 'Bhagya', 'Zeeshan', 'Venkat', 'Shahidullah', 'Amandeep'],
+        WARRIORS: ['Sourav', 'Rajdev', 'Srikanth', 'Charan', 'Ranbir', 'Pavan', 'Shilin', 'Karan'],
+        TIGERS: ['Manvinder', 'Devan', 'Bhaumik', 'Sunny', 'Sabeel', 'Ahamed', 'Parth', 'Pranjal'],
+        THUNDER: ['Sujith', 'Chamika', 'Dinush', 'Sai Abhijith', 'Bhavik', 'Ruvindra', 'Bhanu'],
+        SUPERKINGS: ['Chandrakanth', 'Hanumanth', 'Nazir', 'Bobby', 'Wahid', 'Srini', 'Ashish', 'Karthik', 'Chandan Reddy', 'Anish'],
+        PUNJAB: ['Kiran', 'Imran', 'Burhan', 'Muhammad', 'Subbaiah', 'Deepak', 'Humail', 'Cheema', 'Sukhbir'],
+        MCC: ['Arvind', 'Ershad', 'Benhur', 'Shaheer', 'Sohair', 'Zohaib', 'Manju', 'Emad'],
         GYMKHANA: ['Hamza', 'Gaurav', 'Suren', 'Nouman', 'Omar', 'Zia', 'Qasim', 'Rahul', 'Siddharth']
       };
       const legitBalls = new Set(['run', 'wicket', 'bye', 'legbye']);
@@ -810,7 +812,42 @@
 
         // Speak summary for the over that just finished so the fielding captain can verify
         const runsThisOver = runsPerOver[finishedOver] || 0;
-        speakUmpireNotice(`End of over ${finishedOver}. ${runsThisOver} runs in that over. Score ${totalRuns} for ${totalWickets}.`);
+        const baseMsg = `End of over ${finishedOver}. ${runsThisOver} runs in that over. Score ${totalRuns} for ${totalWickets}.`;
+
+        // If this over is a time-announcement milestone, combine the match-time announcement
+        let combinedMsg = baseMsg;
+        try {
+          if (window.MatchTimer && typeof window.MatchTimer.updateCompletedOvers === 'function') {
+            // Update MatchTimer state but do not let it speak (we'll combine messages)
+            try { window.MatchTimer.updateCompletedOvers(finishedOver, { silent: true }); } catch (e) { /* ignore */ }
+            const mt = (typeof window.MatchTimer.getMatchTimeStatus === 'function') ? window.MatchTimer.getMatchTimeStatus() : null;
+            if (mt && ANNOUNCE_OVERS && ANNOUNCE_OVERS.has && ANNOUNCE_OVERS.has(finishedOver)) {
+              const oversWord = MATCH_NUMBER_WORDS[finishedOver] || String(finishedOver);
+              let timePart = '';
+              if (finishedOver === 20) {
+                if (mt.diffMinutesRounded === 0) timePart = 'The innings time is complete.';
+                else {
+                  const d = Math.abs(mt.diffMinutesRounded);
+                  const behindAhead = mt.diffMinutesRounded > 0 ? 'behind' : 'ahead';
+                  timePart = `${oversWord} overs completed. You are ${d} minute${d === 1 ? '' : 's'} ${behindAhead} schedule. The innings time is complete.`;
+                }
+              } else {
+                if (mt.diffMinutesRounded === 0) timePart = `${oversWord} overs completed. You are on time.`;
+                else {
+                  const d = Math.abs(mt.diffMinutesRounded);
+                  const behindAhead = mt.diffMinutesRounded > 0 ? 'behind' : 'ahead';
+                  timePart = `${oversWord} overs completed. You are ${d} minute${d === 1 ? '' : 's'} ${behindAhead} schedule.`;
+                }
+              }
+              combinedMsg = `${baseMsg} ${timePart}`;
+            }
+          }
+        } catch (e) {
+          console.error('Error combining match time announcement:', e);
+        }
+
+        // Speak combined message (end-of-over + time status)
+        speakUmpireNotice(combinedMsg);
 
         runsPerOver[currentOver] = 0;
         currentBallsDiv = createOverGroup(currentOver);
@@ -931,6 +968,9 @@
 
         // Only increment ball count for legit balls
         if (legitBalls.has(eventKey)) {
+          // Ensure timer starts on the first legitimate ball
+          try { if (window.MatchTimer && typeof window.MatchTimer.startMatchTimer === 'function') window.MatchTimer.startMatchTimer(); } catch (e) { /* ignore */ }
+
           ballCount++;
           ballsInThisOver++;
 
@@ -943,6 +983,14 @@
         }
 
         updateHeader();
+
+        // Update MatchTimer with completed overs (floor of full overs completed)
+        try {
+          if (window.MatchTimer && typeof window.MatchTimer.updateCompletedOvers === 'function') {
+            const completedOvers = Math.floor(ballCount / BALLS_PER_OVER);
+            window.MatchTimer.updateCompletedOvers(completedOvers);
+          }
+        } catch (e) { /* ignore */ }
 
         // Check if target is achieved (show toast only once)
         if (targetRuns !== null && totalRuns >= targetRuns && !targetAchievedNotified) {
@@ -1154,16 +1202,20 @@
         bowlerList.splice(0, bowlerList.length, ...combined);
       }
 
-      function renderBowlerOptions(selectedValue = '') {
+      function renderBowlerOptions(selectedValue = '', targetOver = currentOver) {
+        const previousOverBowler = targetOver > 1 && targetOver === currentOver ? bowlerNames[targetOver - 1] : null;
         bowlerSelect.innerHTML = '<option value="" disabled>Select bowler</option>';
         bowlerList.forEach(name => {
+          if (previousOverBowler && name === previousOverBowler) {
+            return;
+          }
           const option = document.createElement('option');
           option.value = name;
           option.textContent = name;
           bowlerSelect.appendChild(option);
         });
 
-        if (selectedValue && bowlerList.includes(selectedValue)) {
+        if (selectedValue && bowlerList.includes(selectedValue) && !(previousOverBowler && selectedValue === previousOverBowler)) {
           bowlerSelect.value = selectedValue;
         } else {
           bowlerSelect.value = '';
@@ -1216,6 +1268,12 @@
       saveBowlerBtn.addEventListener('click', () => {
         const name = bowlerSelect.value;
         const targetOver = editingOver || currentOver;
+
+        if (targetOver === currentOver && currentOver > 1 && bowlerNames[currentOver - 1] === name) {
+          alert('The previous over bowler cannot bowl the next over. Please choose another bowler.');
+          return;
+        }
+
         bowlerNames[targetOver] = name;
         const span = document.querySelector(`#over-${targetOver} .bowler-name`);
         if (span) span.textContent = name;  // Already safe, but keeping consistent
@@ -1232,7 +1290,7 @@
         bowlerOverNum.textContent = currentOver;
         teamSelect.value = selectedTeam || '';
         syncBowlerListWithTeam();
-        renderBowlerOptions(bowlerNames[currentOver] || '');
+        renderBowlerOptions(bowlerNames[currentOver] || '', currentOver);
         if (!bowlerNames[currentOver]) {
           bowlerSelect.value = '';
           saveBowlerBtn.disabled = true;
@@ -1245,7 +1303,7 @@
         bowlerOverNum.textContent = overNum;
         teamSelect.value = selectedTeam || '';
         syncBowlerListWithTeam();
-        renderBowlerOptions(bowlerNames[overNum] || '');
+        renderBowlerOptions(bowlerNames[overNum] || '', overNum);
         editingOver = overNum;  // Fix: Use separate variable instead of modifying currentOver
         bsBowlerModal.show();
       }
@@ -1313,6 +1371,7 @@
           currentBallsDiv = document.querySelector(`#over-${currentOver} .d-flex`);
           updateHeader();
           updateHistoryVisibility();
+          try { if (window.MatchTimer && typeof window.MatchTimer.updateCompletedOvers === 'function') window.MatchTimer.updateCompletedOvers(Math.floor(ballCount / BALLS_PER_OVER)); } catch (e) { }
           return true;
         } catch (e) {
           console.error('Failed to load session from localStorage:', e);
@@ -1355,6 +1414,7 @@
         updateHeader();
         updateHistoryVisibility();
         saveSession();
+        try { if (window.MatchTimer && typeof window.MatchTimer.updateCompletedOvers === 'function') window.MatchTimer.updateCompletedOvers(Math.floor(ballCount / BALLS_PER_OVER)); } catch (e) { }
       }
 
       function resetGame() {
@@ -1376,6 +1436,7 @@
         targetAchievedNotified = false;
         inningsCompleteNotified = false;
         runsPerOver = { 1: 0 };
+        try { if (window.MatchTimer && typeof window.MatchTimer.resetMatchTimer === 'function') window.MatchTimer.resetMatchTimer(); } catch (e) { }
         location.reload();
       }
 
@@ -1492,10 +1553,172 @@
       promptBowlerModal();
       updateHistoryVisibility();
       pushToHistory();
+      // Accessibility: ensure modals don't leave a focused element inside a hidden dialog.
+      // On show: remember the element that triggered the modal and remove `inert`.
+      // On hide/hidden: if focus remains inside the modal, restore it to the trigger or to the document body,
+      // and mark the modal `inert` so assistive tech does not expose hidden content.
+      (function manageModalFocusAndInert() {
+        // Ensure body can be focused when needed
+        try { if (!document.body.hasAttribute('tabindex')) document.body.setAttribute('tabindex', '-1'); } catch (e) { }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+          let lastTrigger = null;
+          modal.addEventListener('show.bs.modal', () => {
+            lastTrigger = document.activeElement;
+            try { modal.removeAttribute('inert'); } catch (e) { }
+          });
+
+          modal.addEventListener('hide.bs.modal', () => {
+            try {
+              const active = document.activeElement;
+              if (active && modal.contains(active)) {
+                if (lastTrigger && document.contains(lastTrigger) && !modal.contains(lastTrigger)) {
+                  lastTrigger.focus({ preventScroll: true });
+                } else {
+                  try { active.blur(); } catch (e) { }
+                  document.body.focus();
+                }
+              }
+            } catch (err) { console.error('modal focus restore error', err); }
+          });
+
+          modal.addEventListener('hidden.bs.modal', () => {
+            try { modal.setAttribute('inert', ''); } catch (e) { }
+          });
+        });
+      })();
+
       loadSession();
     });
   </script>
-
 </body>
+
+  <!-- Match timer (inlined) -->
+  <script>
+  /* Match timer — inlined into index.html */
+  (function () {
+    'use strict';
+
+    const ANNOUNCE_OVERS = new Set([4, 8, 12, 16, 20]);
+    const MINUTES_PER_OVER = 6;
+
+    const numberWords = { 4: 'Four', 8: 'Eight', 12: 'Twelve', 16: 'Sixteen', 20: 'Twenty' };
+
+    const state = { startTimestamp: null, completedOvers: 0, announcedOvers: new Set(), timerRunning: false };
+
+    function _now() { return Date.now(); }
+
+    function startMatchTimer() {
+      if (!state.startTimestamp) {
+        state.startTimestamp = _now();
+        state.timerRunning = true;
+        console.log('[MatchTimer] Match timer started at', new Date(state.startTimestamp).toISOString());
+      }
+      return state.startTimestamp;
+    }
+
+    function _elapsedMinutes() { if (!state.startTimestamp) return 0; return (_now() - state.startTimestamp) / 60000; }
+
+    function _expectedMinutesForOvers(overs) { return overs * MINUTES_PER_OVER; }
+
+    function _statusFromDiff(diffMinutesRounded) {
+      if (diffMinutesRounded === 0) return { key: 'on', label: 'On schedule' };
+      if (diffMinutesRounded > 0) return { key: 'behind', label: 'Behind schedule' };
+      return { key: 'ahead', label: 'Ahead of schedule' };
+    }
+
+    function _speak(text) {
+      try {
+        // Use the existing speakUmpireNotice helper if present (keeps voice/settings)
+        if (typeof window !== 'undefined' && typeof window.speakUmpireNotice === 'function') {
+          window.speakUmpireNotice(text, { interrupt: false });
+          return;
+        }
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) { console.log('[MatchTimer] speechSynthesis not available. Message:', text); return; }
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        window.speechSynthesis.speak(u);
+      } catch (e) { console.error('[MatchTimer] Failed to speak:', e); }
+    }
+
+    function _makeAnnouncement(overs, elapsedMin, expectedMin) {
+      const diff = elapsedMin - expectedMin;
+      const diffRounded = Math.round(Math.abs(diff));
+      const status = _statusFromDiff(Math.round(diff));
+      const oversWord = numberWords[overs] || `${overs}`;
+
+      if (overs === 20) {
+        if (Math.round(diff) === 0) return `${oversWord} overs completed. The innings time is complete.`;
+        const aheadBehind = status.key === 'behind'
+          ? `You are ${diffRounded} minute${diffRounded === 1 ? '' : 's'} behind schedule.`
+          : `You are ${diffRounded} minute${diffRounded === 1 ? '' : 's'} ahead of schedule.`;
+        return `${oversWord} overs completed. ${aheadBehind} The innings time is complete.`;
+      }
+
+      if (Math.round(diff) === 0) return `${oversWord} overs completed. You are on time.`;
+
+      const aheadBehind = status.key === 'behind'
+        ? `You are ${diffRounded} minute${diffRounded === 1 ? '' : 's'} behind schedule.`
+        : `You are ${diffRounded} minute${diffRounded === 1 ? '' : 's'} ahead of schedule.`;
+
+      return `${oversWord} overs completed. ${aheadBehind}`;
+    }
+
+    function updateCompletedOvers(overs, options = {}) {
+      if (typeof overs !== 'number' || !Number.isFinite(overs) || overs < 0) {
+        throw new Error('updateCompletedOvers: overs must be a non-negative number');
+      }
+      if (overs > 20) overs = 20;
+
+      const prev = state.completedOvers;
+      state.completedOvers = Math.floor(overs);
+
+      if (!state.startTimestamp) console.warn('[MatchTimer] Timer has not been started. Call startMatchTimer() when the first ball is bowled.');
+
+      const newOvers = state.completedOvers;
+      const silent = options && options.silent;
+      if (newOvers > prev && ANNOUNCE_OVERS.has(newOvers) && !state.announcedOvers.has(newOvers)) {
+        const elapsed = _elapsedMinutes();
+        const expected = _expectedMinutesForOvers(newOvers);
+        const msg = _makeAnnouncement(newOvers, elapsed, expected);
+        if (!silent) _speak(msg);
+        state.announcedOvers.add(newOvers);
+        if (newOvers === 20) { state.timerRunning = false; console.log('[MatchTimer] 20 overs reached. Timer stopped.'); }
+      }
+
+      return getMatchTimeStatus();
+    }
+
+    function getMatchTimeStatus() {
+      const elapsed = _elapsedMinutes();
+      const expected = _expectedMinutesForOvers(state.completedOvers);
+      const diff = elapsed - expected;
+      const diffRounded = Math.round(diff);
+      const absDiffRounded = Math.abs(diffRounded);
+      const status = _statusFromDiff(diffRounded);
+
+      return {
+        startTimestamp: state.startTimestamp ? new Date(state.startTimestamp).toISOString() : null,
+        timerRunning: !!state.timerRunning,
+        completedOvers: state.completedOvers,
+        expectedMinutes: expected,
+        elapsedMinutes: Number(elapsed.toFixed(2)),
+        diffMinutesRounded: diffRounded,
+        absDiffMinutes: absDiffRounded,
+        status: status.label
+      };
+    }
+
+    function resetMatchTimer() {
+      state.startTimestamp = null; state.completedOvers = 0; state.announcedOvers.clear(); state.timerRunning = false;
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch (e) { } }
+      console.log('[MatchTimer] Timer reset.');
+    }
+
+    window.MatchTimer = { startMatchTimer, updateCompletedOvers, resetMatchTimer, getMatchTimeStatus };
+  })();
+  </script>
+
+ </body>
 
 </html>
